@@ -6,12 +6,14 @@ return {
   version = '*',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+    'nvim-tree/nvim-web-devicons',
     'MunifTanjim/nui.nvim',
   },
-  lazy = false,
   keys = {
-    { '\\', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
+    { '\\', '<cmd>Neotree toggle<cr>', desc = 'Toggle NeoTree', silent = true },
+    { '<leader>e', '<cmd>Neotree toggle<cr>', desc = 'Explorer Toggle', silent = true },
+    { '<leader>o', '<cmd>Neotree focus<cr>', desc = 'Focus NeoTree', silent = true },
+    { '<leader>f', '<cmd>Neotree reveal<cr>', desc = 'Reveal current file in NeoTree', silent = true },
   },
   opts = {
     filesystem = {
