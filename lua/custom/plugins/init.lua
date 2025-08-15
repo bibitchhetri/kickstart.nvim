@@ -1,7 +1,3 @@
--- You can add your own plugins here or in other files in this directory!
---  I promise not to create any merge conflicts in this directory :)
---
--- See the kickstart.nvim README for more information
 return {
   -- Copilot plugin setup
   {
@@ -42,6 +38,12 @@ return {
     config = function()
       vim.api.nvim_set_keymap('n', '<leader>u', ':UndotreeToggle<CR>', { noremap = true, silent = true })
     end,
+  },
+
+  -- Git integration
+  {
+    'tpope/vim-fugitive',
+    cmd = { 'G', 'Gstatus', 'Gblame', 'Gdiffsplit' }, -- lazy load only when you use Git commands
   },
 
   -- Harpoon plugin setup
