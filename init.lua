@@ -897,11 +897,41 @@ require('lazy').setup({
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
       vim.cmd.colorscheme 'habamax'
+
+      -- Make background transparent
+      local groups = {
+        'Normal',
+        'NormalNC',
+        'NormalFloat',
+        'SignColumn',
+        'MsgArea',
+        'TelescopeNormal',
+        'NvimTreeNormal',
+        'Msg',
+        'ModeMsg',
+        'EchoMsg',
+        'Echo',
+        'EchoHL',
+        'CmdMsg',
+        'CmdHeight',
+      }
+      for _, group in ipairs(groups) do
+        vim.api.nvim_set_hl(0, group, { bg = 'NONE' })
+      end
+
+      -- Set a more meaningful cursor line color
+      vim.api.nvim_set_hl(0, 'CursorLine', { bg = '#2d3748' }) -- Subtle dark gray
+      vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = '#81c784', bg = '#2d3748', bold = true }) -- Green line number
     end,
   },
 
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -921,19 +951,430 @@ require('lazy').setup({
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
 
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
+      -- Enhanced statusline configuration with premium UI
       local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
 
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
+      -- Custom statusline colors with gradients and better contrast
+      local function setup_statusline_colors()
+        -- Main statusline background with rounded appearance
+        vim.api.nvim_set_hl(0, 'StatusLine', { bg = '#1e293b', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'StatusLineNC', { bg = 'NONE', fg = '#64748b' }) -- Make inactive transparent
+
+        -- Mode colors with enhanced rounded appearance and better contrast
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeNormal', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeInsert', { bg = '#10b981', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeVisual', { bg = '#f59e0b', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeReplace', { bg = '#ef4444', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeCommand', { bg = '#8b5cf6', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModeOther', { bg = '#06b6d4', fg = '#ffffff', bold = true })
+
+        -- Section-specific colors
+        vim.api.nvim_set_hl(0, 'StatuslineFilename', { bg = '#334155', fg = '#84cc16', bold = true })
+        vim.api.nvim_set_hl(0, 'StatuslineGit', { bg = '#374151', fg = '#fbbf24' })
+        vim.api.nvim_set_hl(0, 'StatuslineDiagnostics', { bg = '#374151', fg = '#fb7185' })
+        vim.api.nvim_set_hl(0, 'StatuslineLSP', { bg = '#1e293b', fg = '#60a5fa' })
+        vim.api.nvim_set_hl(0, 'StatuslineFileInfo', { bg = '#334155', fg = '#a78bfa' })
+        vim.api.nvim_set_hl(0, 'StatuslineLocation', { bg = '#1e293b', fg = '#34d399' })
+
+        -- Separator colors for smooth transitions (rounded style)
+        vim.api.nvim_set_hl(0, 'StatuslineSep1', { bg = '#1e293b', fg = '#334155' })
+        vim.api.nvim_set_hl(0, 'StatuslineSep2', { bg = '#334155', fg = '#374151' })
+        vim.api.nvim_set_hl(0, 'StatuslineSep3', { bg = '#374151', fg = '#1e293b' })
+
+        -- Enhanced rounded corner highlights with better contrast
+        vim.api.nvim_set_hl(0, 'StatuslineRoundLeft', { bg = 'NONE', fg = '#3b82f6' })
+        vim.api.nvim_set_hl(0, 'StatuslineRoundRight', { bg = 'NONE', fg = '#3b82f6' })
+
+        -- Add subtle shadow effect for floating appearance
+        vim.api.nvim_set_hl(0, 'StatuslineShadow', { bg = 'NONE', fg = '#1e293b' })
+      end
+
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        content = {
+          active = function()
+            -- Get basic sections
+            local mode, mode_hl = MiniStatusline.section_mode { trunc_width = 120 }
+            local git = MiniStatusline.section_git { trunc_width = 75 }
+            local diagnostics = MiniStatusline.section_diagnostics { trunc_width = 75 }
+            local filename = MiniStatusline.section_filename { trunc_width = 140 }
+            local fileinfo = MiniStatusline.section_fileinfo { trunc_width = 120 }
+            local location = MiniStatusline.section_location { trunc_width = 75 }
+            local search = MiniStatusline.section_searchcount { trunc_width = 75 }
+
+            -- Custom separators (enhanced rounded style)
+            local sep_right = '' -- Rounded right separator
+            local sep_left = '' -- Rounded left separator
+            local sep_thin = '│'
+            local round_left = '' -- Enhanced left rounded corner
+            local round_right = '' -- Enhanced right rounded corner
+
+            -- Enhanced LSP status with icons
+            local lsp_status = ''
+            local clients = vim.lsp.get_clients { bufnr = 0 }
+            if #clients > 0 then
+              local client_names = {}
+              for _, client in ipairs(clients) do
+                table.insert(client_names, client.name)
+              end
+              lsp_status = ' ' .. table.concat(client_names, ',') .. ' '
+            end
+
+            -- Enhanced file info with icons
+            local encoding = vim.bo.fileencoding ~= '' and vim.bo.fileencoding or vim.o.encoding
+            local format = vim.bo.fileformat
+            local file_icon = ''
+            if format == 'unix' then
+              file_icon = ''
+            elseif format == 'dos' then
+              file_icon = ''
+            else
+              file_icon = ''
+            end
+            local file_info = ' ' .. file_icon .. ' ' .. encoding:upper() .. ' '
+
+            -- Git status with better formatting
+            local git_formatted = ''
+            if git and git ~= '' then
+              git_formatted = '  ' .. git .. ' '
+            end
+
+            -- Diagnostics with better formatting
+            local diag_formatted = ''
+            if diagnostics and diagnostics ~= '' then
+              diag_formatted = ' ' .. diagnostics .. ' '
+            end
+
+            -- Search count with icon
+            local search_formatted = ''
+            if search and search ~= '' then
+              search_formatted = '  ' .. search .. ' '
+            end
+
+            -- File type with icon
+            local ft = vim.bo.filetype
+            local ft_icon = ''
+            if ft == 'lua' then
+              ft_icon = ''
+            elseif ft == 'python' then
+              ft_icon = ''
+            elseif ft == 'javascript' then
+              ft_icon = ''
+            elseif ft == 'typescript' then
+              ft_icon = ''
+            elseif ft == 'rust' then
+              ft_icon = ''
+            elseif ft == 'go' then
+              ft_icon = ''
+            elseif ft == 'java' then
+              ft_icon = ''
+            elseif ft == 'dart' then
+              ft_icon = ''
+            else
+              ft_icon = ''
+            end
+            local filetype_info = ft ~= '' and (' ' .. ft_icon .. ' ' .. ft .. ' ') or ''
+
+            -- Build statusline groups dynamically to avoid nil values
+            local groups = {}
+
+            -- Left side: Mode + Filename (with enhanced rounded corners)
+            table.insert(groups, { hl = mode_hl, strings = { ' ' .. round_left .. ' ' .. mode .. ' ' } })
+            table.insert(groups, { hl = 'StatuslineSep1', strings = { sep_right } })
+            table.insert(groups, { hl = 'StatuslineFilename', strings = { ' ' .. filename .. ' ' } })
+
+            -- Git section (only if git info exists)
+            if git_formatted ~= '' then
+              table.insert(groups, { hl = 'StatuslineSep2', strings = { sep_right } })
+              table.insert(groups, { hl = 'StatuslineGit', strings = { git_formatted } })
+            end
+
+            -- Diagnostics section (only if diagnostics exist)
+            if diag_formatted ~= '' then
+              table.insert(groups, { hl = 'StatuslineSep3', strings = { sep_right } })
+              table.insert(groups, { hl = 'StatuslineDiagnostics', strings = { diag_formatted } })
+            end
+
+            -- Truncate point
+            table.insert(groups, '%<')
+
+            -- Center: LSP status (only if LSP is active)
+            if lsp_status ~= '' then
+              table.insert(groups, { hl = 'StatuslineLSP', strings = { lsp_status } })
+            end
+
+            -- Right align
+            table.insert(groups, '%=')
+
+            -- Right side: Search, File info, Location
+            if search_formatted ~= '' then
+              table.insert(groups, { hl = 'StatuslineLSP', strings = { search_formatted } })
+              table.insert(groups, { hl = 'StatuslineSep1', strings = { sep_left } })
+            end
+
+            table.insert(groups, { hl = 'StatuslineFileInfo', strings = { file_info } })
+            table.insert(groups, { hl = 'StatuslineSep2', strings = { sep_left } })
+
+            if filetype_info ~= '' then
+              table.insert(groups, { hl = 'StatuslineFilename', strings = { filetype_info } })
+              table.insert(groups, { hl = 'StatuslineSep1', strings = { sep_left } })
+            end
+
+            table.insert(groups, { hl = mode_hl, strings = { ' ' .. location .. ' ' .. round_right .. ' ' } })
+
+            return MiniStatusline.combine_groups(groups)
+          end,
+        },
+      }
+
+      -- Set up colors after statusline setup
+      setup_statusline_colors()
+
+      -- Enhanced message area and command line styling
+      local function setup_message_area()
+        -- Make message area completely transparent to match terminal background
+        vim.api.nvim_set_hl(0, 'MsgArea', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'MsgSeparator', { bg = 'NONE', fg = '#64748b' })
+
+        -- Ensure all message-related highlights are transparent
+        vim.api.nvim_set_hl(0, 'Msg', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'ModeMsg', { bg = 'NONE', fg = '#60a5fa', bold = true })
+        vim.api.nvim_set_hl(0, 'EchoMsg', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'Echo', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'EchoHL', { bg = 'NONE', fg = '#60a5fa' })
+
+        -- Force transparency for command area and message backgrounds
+        vim.api.nvim_set_hl(0, 'CmdHeight', { bg = 'NONE' })
+        vim.api.nvim_set_hl(0, 'CmdMsg', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'CmdError', { bg = 'NONE', fg = '#dc2626', bold = true })
+        vim.api.nvim_set_hl(0, 'CmdWarn', { bg = 'NONE', fg = '#d97706', bold = true })
+
+        -- Command line and search styling (make command line transparent)
+        vim.api.nvim_set_hl(0, 'CmdLine', { bg = 'NONE', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'CmdlinePrompt', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'CmdlineIcon', { bg = 'NONE', fg = '#60a5fa' })
+
+        -- Search highlighting
+        vim.api.nvim_set_hl(0, 'Search', { bg = '#fbbf24', fg = '#1f2937', bold = true })
+        vim.api.nvim_set_hl(0, 'IncSearch', { bg = '#f59e0b', fg = '#1f2937', bold = true })
+        vim.api.nvim_set_hl(0, 'CurSearch', { bg = '#ef4444', fg = '#ffffff', bold = true })
+
+        -- Message types with better colors
+        vim.api.nvim_set_hl(0, 'ErrorMsg', { bg = '#dc2626', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'WarningMsg', { bg = '#d97706', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'MoreMsg', { bg = '#059669', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'Question', { bg = '#7c3aed', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'Title', { fg = '#60a5fa', bold = true })
+
+        -- Popup menu styling
+        vim.api.nvim_set_hl(0, 'Pmenu', { bg = '#1e293b', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'PmenuSel', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'PmenuSbar', { bg = '#374151' })
+        vim.api.nvim_set_hl(0, 'PmenuThumb', { bg = '#60a5fa' })
+        vim.api.nvim_set_hl(0, 'PmenuKind', { bg = '#1e293b', fg = '#34d399' })
+        vim.api.nvim_set_hl(0, 'PmenuKindSel', { bg = '#3b82f6', fg = '#ffffff' })
+        vim.api.nvim_set_hl(0, 'PmenuExtra', { bg = '#1e293b', fg = '#94a3b8' })
+        vim.api.nvim_set_hl(0, 'PmenuExtraSel', { bg = '#3b82f6', fg = '#e2e8f0' })
+
+        -- Floating window styling
+        vim.api.nvim_set_hl(0, 'NormalFloat', { bg = '#1e293b', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'FloatBorder', { bg = '#1e293b', fg = '#60a5fa' })
+        vim.api.nvim_set_hl(0, 'FloatTitle', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+
+        -- Wild menu (command completion)
+        vim.api.nvim_set_hl(0, 'WildMenu', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+
+        -- Notification styling (for plugins like nvim-notify)
+        vim.api.nvim_set_hl(0, 'NotifyERRORBorder', { fg = '#dc2626' })
+        vim.api.nvim_set_hl(0, 'NotifyWARNBorder', { fg = '#d97706' })
+        vim.api.nvim_set_hl(0, 'NotifyINFOBorder', { fg = '#2563eb' })
+        vim.api.nvim_set_hl(0, 'NotifyDEBUGBorder', { fg = '#64748b' })
+        vim.api.nvim_set_hl(0, 'NotifyTRACEBorder', { fg = '#7c3aed' })
+        vim.api.nvim_set_hl(0, 'NotifyERRORTitle', { fg = '#dc2626', bold = true })
+        vim.api.nvim_set_hl(0, 'NotifyWARNTitle', { fg = '#d97706', bold = true })
+        vim.api.nvim_set_hl(0, 'NotifyINFOTitle', { fg = '#2563eb', bold = true })
+        vim.api.nvim_set_hl(0, 'NotifyDEBUGTitle', { fg = '#64748b', bold = true })
+        vim.api.nvim_set_hl(0, 'NotifyTRACETitle', { fg = '#7c3aed', bold = true })
+
+        -- Fix any remaining brownish/non-transparent backgrounds
+        vim.api.nvim_set_hl(0, 'LineNr', { bg = 'none', fg = '#64748b' })
+        vim.api.nvim_set_hl(0, 'LineNrAbove', { bg = 'none', fg = '#475569' })
+        vim.api.nvim_set_hl(0, 'LineNrBelow', { bg = 'none', fg = '#475569' })
+        vim.api.nvim_set_hl(0, 'CursorLineNr', { bg = '#2d3748', fg = '#81c784', bold = true })
+
+        -- Ensure command area and tabs are transparent
+        vim.api.nvim_set_hl(0, 'TabLine', { bg = 'none', fg = '#94a3b8' })
+        vim.api.nvim_set_hl(0, 'TabLineFill', { bg = 'none' })
+        vim.api.nvim_set_hl(0, 'TabLineSel', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+
+        -- Fix terminal and command line backgrounds
+        vim.api.nvim_set_hl(0, 'StatusLineTerm', { bg = '#1e293b', fg = '#f1f5f9' })
+        vim.api.nvim_set_hl(0, 'StatusLineTermNC', { bg = 'none', fg = '#64748b' })
+
+        -- Ensure all window separators are transparent
+        vim.api.nvim_set_hl(0, 'WinSeparator', { bg = 'none', fg = '#374151' })
+        vim.api.nvim_set_hl(0, 'VertSplit', { bg = 'none', fg = '#374151' })
+
+        -- Fix any remaining UI elements that might have brown backgrounds
+        vim.api.nvim_set_hl(0, 'EndOfBuffer', { bg = 'none', fg = '#475569' })
+        vim.api.nvim_set_hl(0, 'NonText', { bg = 'none', fg = '#475569' })
+        vim.api.nvim_set_hl(0, 'SpecialKey', { bg = 'none', fg = '#64748b' })
+
+        -- Ensure completion menu backgrounds are consistent
+        vim.api.nvim_set_hl(0, 'PmenuSel', { bg = '#3b82f6', fg = '#ffffff', bold = true })
+        vim.api.nvim_set_hl(0, 'PmenuKindSel', { bg = '#3b82f6', fg = '#ffffff' })
+        vim.api.nvim_set_hl(0, 'PmenuExtraSel', { bg = '#3b82f6', fg = '#e2e8f0' })
+      end
+
+      setup_message_area()
+
+      -- Create autocmd to ensure message area stays transparent
+      vim.api.nvim_create_autocmd({ 'ColorScheme', 'VimEnter', 'UIEnter' }, {
+        group = vim.api.nvim_create_augroup('TransparentMessageArea', { clear = true }),
+        callback = function()
+          -- Force complete transparency for all message-related areas
+          local transparent_groups = {
+            'MsgArea',
+            'Msg',
+            'ModeMsg',
+            'EchoMsg',
+            'Echo',
+            'EchoHL',
+            'CmdMsg',
+            'CmdHeight',
+            'CmdLine',
+            'CmdlinePrompt',
+            'CmdlineIcon',
+            'StatusLineTerm',
+            'StatusLineTermNC',
+            'WinBar',
+            'WinBarNC',
+            'TabLine',
+            'TabLineFill',
+            'TabLineSel',
+            'VertSplit',
+            'WinSeparator',
+          }
+
+          for _, group in ipairs(transparent_groups) do
+            -- Get existing highlight and preserve foreground but remove background
+            local existing = vim.api.nvim_get_hl(0, { name = group })
+            if existing.fg then
+              vim.api.nvim_set_hl(0, group, { bg = 'NONE', fg = existing.fg, bold = existing.bold })
+            else
+              vim.api.nvim_set_hl(0, group, { bg = 'NONE' })
+            end
+          end
+
+          -- Specifically target message area backgrounds
+          vim.api.nvim_set_hl(0, 'MsgArea', { bg = 'NONE', fg = '#f1f5f9' })
+          vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
+          vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'NONE' })
+        end,
+      })
+
+      -- Enhanced command line and message area settings
+      vim.opt.cmdheight = 1 -- Keep command line but make it transparent
+      vim.opt.showcmd = true -- Show command in status line
+      vim.opt.showmode = false -- Don't show mode (already in statusline)
+      vim.opt.laststatus = 3 -- Global statusline (rounded appearance)
+
+      -- Better command line completion
+      vim.opt.wildmenu = true
+      vim.opt.wildmode = 'longest:full,full'
+      vim.opt.wildoptions = 'pum' -- Use popup menu for completion
+
+      -- Message area improvements
+      vim.opt.shortmess:append 'c' -- Don't give completion messages
+      vim.opt.shortmess:append 'I' -- Don't show intro message
+      vim.opt.shortmess:append 'W' -- Don't show written message
+
+      -- Enhanced search display
+      vim.opt.hlsearch = true
+      vim.opt.incsearch = true
+      vim.opt.ignorecase = true
+      vim.opt.smartcase = true
+
+      -- Force transparent message area with multiple approaches
+      local function force_transparency()
+        -- Override all possible background-related highlights including message area line
+        local all_transparent = {
+          'MsgArea',
+          'Normal',
+          'NormalNC',
+          'StatusLine',
+          'StatusLineNC',
+          'StatusLineTerm',
+          'StatusLineTermNC',
+          'WinBar',
+          'WinBarNC',
+          'Msg',
+          'ModeMsg',
+          'EchoMsg',
+          'Echo',
+          'EchoHL',
+          'CmdMsg',
+          'CmdHeight',
+          'CmdLine',
+          'TabLine',
+          'TabLineFill',
+          'MsgSeparator',
+          -- Message area fill/padding areas
+          'MsgAreaFill',
+          'CmdLineFill',
+          'StatusLineFill',
+          'WinBarFill',
+        }
+
+        for _, group in ipairs(all_transparent) do
+          pcall(vim.api.nvim_set_hl, 0, group, { bg = 'NONE' })
+        end
+
+        -- Specifically fix the message area line highlighting that causes black background
+        pcall(vim.api.nvim_set_hl, 0, 'MsgArea', { bg = 'NONE', fg = 'NONE' })
+
+        -- Fix the empty/padding space in message area line
+        pcall(vim.api.nvim_set_hl, 0, 'MsgAreaFill', { bg = 'NONE' })
+        pcall(vim.api.nvim_set_hl, 0, 'CmdLineFill', { bg = 'NONE' })
+
+        -- Target the specific background of message line separator/fill
+        pcall(vim.api.nvim_set_hl, 0, 'MsgSeparator', { bg = 'NONE', fg = 'NONE' })
+
+        -- Keep the beautiful statusline but ensure message area is separate
+        pcall(vim.api.nvim_set_hl, 0, 'StatusLine', { bg = '#1e293b', fg = '#f1f5f9' })
+        pcall(vim.api.nvim_set_hl, 0, 'StatusLineNC', { bg = 'NONE', fg = '#64748b' })
+
+        -- Force transparency for any remaining message area backgrounds
+        pcall(vim.cmd, 'highlight MsgArea guibg=NONE ctermbg=NONE')
+        pcall(vim.cmd, 'highlight Normal guibg=NONE ctermbg=NONE')
+
+        -- Force redraw
+        vim.cmd 'redraw!'
+      end
+
+      -- Apply immediately and repeatedly
+      vim.schedule(force_transparency)
+
+      -- Create a timer to keep applying transparency (aggressive approach)
+      local timer = vim.uv.new_timer()
+      timer:start(100, 500, function() -- Start after 100ms, repeat every 500ms
+        vim.schedule(force_transparency)
+      end)
+
+      -- Stop the timer after 5 seconds
+      vim.defer_fn(function()
+        timer:stop()
+        timer:close()
+      end, 5000)
+
+      -- Enhanced location display with icons and percentage
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
-        return '%2l:%-2v'
+        local line = vim.fn.line '.'
+        local col = vim.fn.virtcol '.'
+        local total_lines = vim.fn.line '$'
+        local percentage = math.floor((line / total_lines) * 100)
+        return string.format(' %d:%d  %d%%', line, col, percentage)
       end
 
       -- ... and there is more!
@@ -946,7 +1387,20 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'dart' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'dart',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
