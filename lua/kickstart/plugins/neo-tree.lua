@@ -6,7 +6,7 @@ return {
   version = '*',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'nvim-tree/nvim-web-devicons',
+    'kyazdani42/nvim-web-devicons', -- Better all-the-icons support
     'MunifTanjim/nui.nvim',
   },
   keys = {
@@ -21,7 +21,27 @@ return {
         mappings = {
           ['\\'] = 'close_window',
         },
-        position = 'right',
+        -- position = 'right',
+        position = 'left',
+      },
+      use_libuv_file_watcher = true,
+    },
+    -- Icons are automatically provided by nvim-web-devicons
+    -- File icons are shown based on file extension/type (e.g., .py, .js, .lua, .c, .cpp, etc.)
+    -- Folder icons are also provided by nvim-web-devicons
+    default_component_configs = {
+      git_status = {
+        symbols = {
+          added = '✚',
+          deleted = '✖',
+          modified = '✹',
+          renamed = '➜',
+          untracked = '★',
+          ignored = '◌',
+          unstaged = '✗',
+          staged = '✓',
+          conflict = '⚠',
+        },
       },
     },
   },

@@ -59,6 +59,38 @@ return {
       desc = 'Toggle Floating Terminal',
       mode = { 'n', 'i', 'v', 't' },
     },
+
+    {
+      '<leader>gg',
+      function()
+        local ok, toggleterm = pcall(require, 'toggleterm')
+        if not ok then
+          vim.notify('toggleterm.nvim is not loaded!', vim.log.levels.ERROR)
+          return
+        end
+
+        local Terminal = require('toggleterm.terminal').Terminal
+
+        if not _G._LAZYGIT_TERMINAL then
+          _G._LAZYGIT_TERMINAL = Terminal:new {
+            cmd = 'lazygit',
+            hidden = true,
+            direction = 'float',
+            float_opts = { border = 'rounded' },
+          }
+        end
+
+        local lazygit = _G._LAZYGIT_TERMINAL
+
+        if vim.fn.executable 'lazygit' == 0 then
+          vim.notify('LazyGit is not installed!', vim.log.levels.ERROR)
+          return
+        end
+
+        lazygit:toggle()
+      end,
+      desc = 'Toggle LazyGit',
+    },
   },
   config = function()
     require('toggleterm').setup {
